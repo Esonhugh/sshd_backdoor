@@ -1,7 +1,7 @@
 CLANG ?= clang
 CFLAGS := -O2 -g -Wall -Werror -I /usr/include/aarch64-linux-gnu $(CFLAGS)
 GOPROXY := 'https://goproxy.io,direct'
-GENERATED_TYPE := my_event
+GENERATED_TYPE := event
 
 generate: mod_tidy
 generate: export BPF_CLANG := $(CLANG)

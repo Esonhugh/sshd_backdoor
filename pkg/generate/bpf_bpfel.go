@@ -13,9 +13,11 @@ import (
 	"github.com/cilium/ebpf"
 )
 
-type BpfMyEvent struct {
-	Saddr uint32
-	Daddr uint32
+type BpfEvent struct {
+	Pid     int32
+	Comm    [16]int8
+	Success bool
+	_       [3]byte
 }
 
 // LoadBpf returns the embedded CollectionSpec for Bpf.
@@ -59,16 +61,21 @@ type BpfSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type BpfProgramSpecs struct {
-	XdpDurdurDropFunc *ebpf.ProgramSpec `ebpf:"xdp_durdur_drop_func"`
+	HandleCloseExit   *ebpf.ProgramSpec `ebpf:"handle_close_exit"`
+	HandleOpenatEnter *ebpf.ProgramSpec `ebpf:"handle_openat_enter"`
+	HandleOpenatExit  *ebpf.ProgramSpec `ebpf:"handle_openat_exit"`
+	HandleReadEnter   *ebpf.ProgramSpec `ebpf:"handle_read_enter"`
+	HandleReadExit    *ebpf.ProgramSpec `ebpf:"handle_read_exit"`
 }
 
 // BpfMapSpecs contains maps before they are loaded into the kernel.
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type BpfMapSpecs struct {
-	DropFromAddrs   *ebpf.MapSpec `ebpf:"drop_from_addrs"`
-	DropToAddrs     *ebpf.MapSpec `ebpf:"drop_to_addrs"`
-	EventReportArea *ebpf.MapSpec `ebpf:"event_report_area"`
+	MapBuffAddrs     *ebpf.MapSpec `ebpf:"map_buff_addrs"`
+	MapFds           *ebpf.MapSpec `ebpf:"map_fds"`
+	MapPayloadBuffer *ebpf.MapSpec `ebpf:"map_payload_buffer"`
+	Rb               *ebpf.MapSpec `ebpf:"rb"`
 }
 
 // BpfObjects contains all objects after they have been loaded into the kernel.
@@ -90,16 +97,18 @@ func (o *BpfObjects) Close() error {
 //
 // It can be passed to LoadBpfObjects or ebpf.CollectionSpec.LoadAndAssign.
 type BpfMaps struct {
-	DropFromAddrs   *ebpf.Map `ebpf:"drop_from_addrs"`
-	DropToAddrs     *ebpf.Map `ebpf:"drop_to_addrs"`
-	EventReportArea *ebpf.Map `ebpf:"event_report_area"`
+	MapBuffAddrs     *ebpf.Map `ebpf:"map_buff_addrs"`
+	MapFds           *ebpf.Map `ebpf:"map_fds"`
+	MapPayloadBuffer *ebpf.Map `ebpf:"map_payload_buffer"`
+	Rb               *ebpf.Map `ebpf:"rb"`
 }
 
 func (m *BpfMaps) Close() error {
 	return _BpfClose(
-		m.DropFromAddrs,
-		m.DropToAddrs,
-		m.EventReportArea,
+		m.MapBuffAddrs,
+		m.MapFds,
+		m.MapPayloadBuffer,
+		m.Rb,
 	)
 }
 
@@ -107,12 +116,20 @@ func (m *BpfMaps) Close() error {
 //
 // It can be passed to LoadBpfObjects or ebpf.CollectionSpec.LoadAndAssign.
 type BpfPrograms struct {
-	XdpDurdurDropFunc *ebpf.Program `ebpf:"xdp_durdur_drop_func"`
+	HandleCloseExit   *ebpf.Program `ebpf:"handle_close_exit"`
+	HandleOpenatEnter *ebpf.Program `ebpf:"handle_openat_enter"`
+	HandleOpenatExit  *ebpf.Program `ebpf:"handle_openat_exit"`
+	HandleReadEnter   *ebpf.Program `ebpf:"handle_read_enter"`
+	HandleReadExit    *ebpf.Program `ebpf:"handle_read_exit"`
 }
 
 func (p *BpfPrograms) Close() error {
 	return _BpfClose(
-		p.XdpDurdurDropFunc,
+		p.HandleCloseExit,
+		p.HandleOpenatEnter,
+		p.HandleOpenatExit,
+		p.HandleReadEnter,
+		p.HandleReadExit,
 	)
 }
 
