@@ -4,7 +4,7 @@ GOPROXY := 'https://goproxy.io,direct'
 GENERATED_TYPE := event
 
 build: mod_tidy generate
-	go build -o sshd_backdoor main.go
+	go build -o sshd_backdoor cmd/main.go
 
 generate: mod_tidy
 generate: export BPF_CLANG := $(CLANG)
