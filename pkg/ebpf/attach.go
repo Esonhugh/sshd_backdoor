@@ -32,9 +32,8 @@ func (e *EBPF) Attach(iface *net.Interface) error {
 		)
 	}
 
-	l, err := link.AttachXDP(link.XDPOptions{
-		Program:   e.Objects.XdpDurdurDropFunc,
-		Interface: iface.Index,
+	l, err := link.AttachTracing(link.TracingOptions{
+		Program: e.Objects.HandleOpenatEnter,
 	})
 	if err != nil {
 		return err

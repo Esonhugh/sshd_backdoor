@@ -30,6 +30,7 @@ func (e *EBPF) Load() error {
 	}
 
 	// Load for Maps in C progam.
+	// spec.Maps[""].Pinning = ebpf.PinByName
 	spec.Maps["drop_from_addrs"].Pinning = ebpf.PinByName
 	spec.Maps["drop_to_addrs"].Pinning = ebpf.PinByName
 	spec.Maps["event_report_area"].Pinning = ebpf.PinByName
