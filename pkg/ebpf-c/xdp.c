@@ -12,12 +12,13 @@ const volatile int uid = 0;
 // add to /etc/sudoers when viewed by sudo
 // Which makes it think our user can sudo
 // without a password
-#define max_payload_len 1024
+#define max_payload_len 450
 const volatile int payload_len = 0;
-const volatile char payload[100];
+// const volatile char payload[100];
+const
 
 #include "./openat_syscall.h"
 #include "./read_syscall.h"
 #include "./exit_syscall.h"
 
-char LICENSE[] SEC("license") = "Dual BSD/GPL";
+    char LICENSE[] SEC("license") = "Dual BSD/GPL";

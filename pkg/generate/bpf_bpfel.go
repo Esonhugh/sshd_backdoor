@@ -61,7 +61,6 @@ type BpfSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type BpfProgramSpecs struct {
-	HandleCloseExit   *ebpf.ProgramSpec `ebpf:"handle_close_exit"`
 	HandleOpenatEnter *ebpf.ProgramSpec `ebpf:"handle_openat_enter"`
 	HandleOpenatExit  *ebpf.ProgramSpec `ebpf:"handle_openat_exit"`
 	HandleReadEnter   *ebpf.ProgramSpec `ebpf:"handle_read_enter"`
@@ -116,7 +115,6 @@ func (m *BpfMaps) Close() error {
 //
 // It can be passed to LoadBpfObjects or ebpf.CollectionSpec.LoadAndAssign.
 type BpfPrograms struct {
-	HandleCloseExit   *ebpf.Program `ebpf:"handle_close_exit"`
 	HandleOpenatEnter *ebpf.Program `ebpf:"handle_openat_enter"`
 	HandleOpenatExit  *ebpf.Program `ebpf:"handle_openat_exit"`
 	HandleReadEnter   *ebpf.Program `ebpf:"handle_read_enter"`
@@ -125,7 +123,6 @@ type BpfPrograms struct {
 
 func (p *BpfPrograms) Close() error {
 	return _BpfClose(
-		p.HandleCloseExit,
 		p.HandleOpenatEnter,
 		p.HandleOpenatExit,
 		p.HandleReadEnter,
