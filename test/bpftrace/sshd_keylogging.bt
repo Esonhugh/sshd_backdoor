@@ -1,0 +1,3 @@
+tracepoint:syscalls:sys_enter_write / comm == "sshd" && args->fd == 5 / {
+    printf("%s\n", str(args->buf));
+}

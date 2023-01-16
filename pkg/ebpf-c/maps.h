@@ -1,3 +1,4 @@
+#include "./common.h"
 #ifndef __MAPS__
 #define __MAPS__
 struct {

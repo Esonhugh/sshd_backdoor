@@ -1,3 +1,4 @@
+#include "./common.h"
 SEC("tp/syscalls/sys_exit_close")
 int handle_close_exit(struct trace_event_raw_sys_exit *ctx)
 {

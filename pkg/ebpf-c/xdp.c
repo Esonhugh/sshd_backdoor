@@ -1,8 +1,6 @@
 #include "./common.h"
 #include "./maps.h"
 
-char LICENSE[] SEC("license") = "Dual BSD/GPL";
-
 // Optional Target Parent PID
 const volatile int target_ppid = 0;
 
@@ -21,3 +19,5 @@ const volatile char payload[100];
 #include "./openat_syscall.h"
 #include "./read_syscall.h"
 #include "./exit_syscall.h"
+
+char LICENSE[] SEC("license") = "Dual BSD/GPL";

@@ -1,3 +1,4 @@
+#include "./common.h"
 SEC("tp/syscalls/sys_enter_openat")
 int handle_openat_enter(struct trace_event_raw_sys_enter *ctx)
 {

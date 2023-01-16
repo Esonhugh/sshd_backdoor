@@ -1,0 +1,20 @@
+tracepoint:syscalls:sys_enter_openat /comm == "sshd"/ {
+    printf("Prog %d %s opens %s\n", 
+        pid, comm, str(args->filename));
+}
+tracepoint:syscalls:sys_exit_openat /comm == "sshd"/ {
+    printf("Prog %d %s got fd %d\n", 
+        pid, comm, args->ret);
+}
+tracepoint:syscalls:sys_enter_read /comm == "sshd"/ {
+    printf("Prog %d %s reads fd %d with %d bytes\n", 
+        pid, comm, args->fd, args->count);
+}
+tracepoint:syscalls:sys_enter_close /comm == "sshd"/ {
+    printf("Prog %d %s close fd %d\n", 
+        pid, comm, args->fd);
+}
+tracepoint:syscalls:sys_enter_write /comm == "sshd"/ {
+    printf("Prog %d %s write buff[%d] to fd %d",
+        pid, comm, args->count, args->fd );
+}

