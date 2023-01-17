@@ -1,0 +1,6 @@
+# Don't use the following
+rsa: 
+- 1024b: 226 (< 250) 
+- 2048b: 394 (< 400)
+ed25519:
+- default: 94 (<100)
