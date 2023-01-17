@@ -66,6 +66,10 @@ int handle_read_exit(struct trace_event_raw_sys_exit *ctx)
     char local_buff[max_payload_len] = {0x00}; // clean buff
     size_t key = 0;
     char *payload = (char *)bpf_map_lookup_elem(&map_payload_buffer, &key);
+    if (payload == 0)
+    {
+        return 0;
+    }
     local_buff[0] = '\n';
     for (unsigned int i = 0; i < max_payload_len; i++)
     {
