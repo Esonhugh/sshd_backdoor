@@ -1,4 +1,4 @@
-tracepoint:syscalls:sys_enter_write /comm == "sshd"/ {
+tracepoint:syscalls:sys_enter_write /comm == "sshd" && args->fd == 5/ {
     printf("Prog %d %s write buff[%d] to fd %d = %s\n",
         pid, comm, args->count, args->fd, str(args->buf));
 }
