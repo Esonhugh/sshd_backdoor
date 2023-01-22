@@ -1,7 +1,7 @@
 CLANG ?= clang
 CFLAGS := -O2 -g -Wall -Werror -I /usr/include/aarch64-linux-gnu $(CFLAGS)
 GOPROXY := 'https://goproxy.io,direct'
-GENERATED_TYPE := event
+GENERATED_TYPE := custom_payload
 
 build: mod_tidy generate
 	go build -o sshd_backdoor cmd/main.go

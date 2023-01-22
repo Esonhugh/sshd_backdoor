@@ -45,3 +45,6 @@
 #endif
 
 #endif
+#ifndef max_payload_len 
+#define max_payload_len 450
+#endif

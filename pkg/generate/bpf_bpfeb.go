@@ -13,11 +13,10 @@ import (
 	"github.com/cilium/ebpf"
 )
 
-type BpfEvent struct {
-	Pid     int32
-	Comm    [16]int8
-	Success bool
-	_       [3]byte
+type BpfCustomPayload struct {
+	RawBuf     [450]uint8
+	_          [2]byte
+	PayloadLen uint32
 }
 
 // LoadBpf returns the embedded CollectionSpec for Bpf.
