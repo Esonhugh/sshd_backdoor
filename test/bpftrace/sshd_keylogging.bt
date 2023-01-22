@@ -1,3 +1,8 @@
-tracepoint:syscalls:sys_enter_write / comm == "sshd" && args->fd == 5 && pid != 1596349 / {
-    printf("%r\n", buf(args->buf, args->count ));
+// explain:
+//  fd > 5 always occurs when user create a new interface
+//  fd = 5 is common command line shell.
+//  fd = 10 termius will use this, other command line shell is not test yet.
+// This script can logging all communication of new ssh process when new login attempt happen.
+tracepoint:syscalls:sys_enter_write / comm == "sshd" && args->fd >= 5 / {
+    printf("[pid %d fd %d] %r\n", pid, args->fd ,buf(args->buf, args->count ));
 }
