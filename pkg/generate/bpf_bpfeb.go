@@ -19,6 +19,11 @@ type BpfCustomPayload struct {
 	PayloadLen uint32
 }
 
+type BpfSyscallReadLogging struct {
+	BufferAddr  uint64
+	CallingSize int64
+}
+
 // LoadBpf returns the embedded CollectionSpec for Bpf.
 func LoadBpf() (*ebpf.CollectionSpec, error) {
 	reader := bytes.NewReader(_BpfBytes)
