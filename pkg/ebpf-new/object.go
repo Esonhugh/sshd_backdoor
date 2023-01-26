@@ -20,7 +20,10 @@ func (c *CiliumEBPFRuntime) RemoveMemoryLimit() error {
 	return rlimit.RemoveMemlock()
 }
 
-// LoadBpfObjects func overwrite generate.LoadBpfObjects() func. There are contains custom Pinning process of maps.
+/*
+ *	LoadBpfObjects func overwrite generate.LoadBpfObjects() func. There are contains custom Pinning process of maps.
+ *
+ */
 func (c *CiliumEBPFRuntime) LoadBpfObjects(opts *ebpf.CollectionOptions) error {
 	spec, err := generate.LoadBpf()
 	if err != nil {
@@ -34,7 +37,8 @@ func (c *CiliumEBPFRuntime) LoadBpfObjects(opts *ebpf.CollectionOptions) error {
 }
 
 // CreateCiliumEBPFRuntime func will create links and load BPF objects in system.
-func (c *CiliumEBPFRuntime) CreateCiliumEBPFRuntime() error {
+// if used
+func (c *CiliumEBPFRuntime) CreateCiliumEBPFRuntime(isAlreadyPinned bool) error {
 	// var BpfObjects generate.BpfObjects
 	//err := generate.LoadBpfObjects(&BpfObjects, &ebpf.CollectionOptions{
 	err := c.LoadBpfObjects(&ebpf.CollectionOptions{
@@ -45,14 +49,17 @@ func (c *CiliumEBPFRuntime) CreateCiliumEBPFRuntime() error {
 	if err != nil {
 		return fmt.Errorf("load ebpf Objects error: %w", err)
 	}
-	// err = c.CreateLink()
-	err = c.CreatePinnedLink()
-	if err != nil {
-		return fmt.Errorf("create link error: %w", err)
+	if isAlreadyPinned {
+		// err = c.CreateLink()
+		err = c.CreatePinnedLink()
+		if err != nil {
+			return fmt.Errorf("create link error: %w", err)
+		}
 	}
 	return nil
 }
 
+// Close func closes all Objects in c.Objects and all Links in c.Links. Only Close().
 func (c *CiliumEBPFRuntime) Close() error {
 	if c.Objects != nil {
 		if err := c.Objects.Close(); err != nil {
