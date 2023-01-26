@@ -1,0 +1,9 @@
+         _         _   _                _       _
+ ___ ___| |__   __| | | |__   __ _  ___| | ____| | ___   ___  _ __
+/ __/ __| '_ \ / _` | | '_ \ / _` |/ __| |/ / _` |/ _ \ / _ \| '__|
+\__ \__ \ | | | (_| | | |_) | (_| | (__|   < (_| | (_) | (_) | |
+|___/___/_| |_|\__,_| |_.__/ \__,_|\___|_|\_\__,_|\___/ \___/|_|
+
+sshd backdoor:
+    program using the ebpf technique to inject sshd a backdoor
+    to allow remote root login without password.
