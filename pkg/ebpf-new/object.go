@@ -8,6 +8,7 @@ import (
 	"github.com/cilium/ebpf/rlimit"
 )
 
+// CiliumEBPFRuntime Object maintains all BPF objects and links, handle the Object to Control Low Level of
 type CiliumEBPFRuntime struct {
 	// Objects contains bpf maps progs etc..
 	Objects *generate.BpfObjects
@@ -20,10 +21,7 @@ func (c *CiliumEBPFRuntime) RemoveMemoryLimit() error {
 	return rlimit.RemoveMemlock()
 }
 
-/*
- *	LoadBpfObjects func overwrite generate.LoadBpfObjects() func. There are contains custom Pinning process of maps.
- *
- */
+// LoadBpfObjects func overwrite generate.LoadBpfObjects() func. There are contains custom Pinning process of maps.
 func (c *CiliumEBPFRuntime) LoadBpfObjects(opts *ebpf.CollectionOptions) error {
 	spec, err := generate.LoadBpf()
 	if err != nil {
@@ -36,8 +34,15 @@ func (c *CiliumEBPFRuntime) LoadBpfObjects(opts *ebpf.CollectionOptions) error {
 	return spec.LoadAndAssign(c.Objects, opts)
 }
 
+// New func returns a new CiliumEBPFRuntime that is not init. Init with CiliumEBPFRuntime.CreateCiliumEBPFRuntime().
+func New() *CiliumEBPFRuntime {
+	return &CiliumEBPFRuntime{
+		Objects: &generate.BpfObjects{},
+	}
+}
+
 // CreateCiliumEBPFRuntime func will create links and load BPF objects in system.
-// if used
+// if isAlreadyPinned is true, that will CreatePinnedLink.
 func (c *CiliumEBPFRuntime) CreateCiliumEBPFRuntime(isAlreadyPinned bool) error {
 	// var BpfObjects generate.BpfObjects
 	//err := generate.LoadBpfObjects(&BpfObjects, &ebpf.CollectionOptions{

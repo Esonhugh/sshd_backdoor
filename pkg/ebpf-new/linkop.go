@@ -18,6 +18,7 @@ func (c *CiliumEBPFRuntime) PinLinks() error {
 	return nil
 }
 
+// InfoLinks func is used to print links info metadata
 func (c *CiliumEBPFRuntime) InfoLinks() {
 	for k, v := range c.Links {
 		Info, err := v.Info()
@@ -28,6 +29,7 @@ func (c *CiliumEBPFRuntime) InfoLinks() {
 	}
 }
 
+// UnpinLinks func is used to unpin links from filesystem.
 func (c *CiliumEBPFRuntime) UnpinLinks() error {
 	for k, v := range c.Links {
 		err := v.Unpin()
@@ -45,6 +47,7 @@ func (c *CiliumEBPFRuntime) CreatePinnedLink() error {
 	c.Links[BPF_PROG_SYSCALL_EXIT_OPENAT], err = link.LoadPinnedLink(BPF_PROG_FS_SYSCALL_EXIT_OPENAT, &ebpf.LoadPinOptions{})
 	c.Links[BPF_PROG_SYSCALL_ENTER_READ], err = link.LoadPinnedLink(BPF_PROG_FS_SYSCALL_ENTER_READ, &ebpf.LoadPinOptions{})
 	c.Links[BPF_PROG_SYSCALL_EXIT_READ], err = link.LoadPinnedLink(BPF_PROG_FS_SYSCALL_EXIT_READ, &ebpf.LoadPinOptions{})
+	// c.Links[BPF_MAPS_PAYLOAD_BUFFER], err = link.LoadPinnedLink(BPF_MAPS_FS_PAYLOAD_BUFFER, &ebpf.LoadPinOptions{})
 	if err != nil {
 		return fmt.Errorf("load pinned link error: %w", err)
 	}

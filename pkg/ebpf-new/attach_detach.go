@@ -5,6 +5,7 @@ import (
 	"github.com/cilium/ebpf/link"
 )
 
+// Attach func create links map and make the program attached to the kernel.
 func (c *CiliumEBPFRuntime) Attach() error {
 	var err error
 	c.Links[BPF_PROG_SYSCALL_ENTER_OPENAT], err = link.AttachTracing(link.TracingOptions{
