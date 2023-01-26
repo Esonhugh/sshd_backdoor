@@ -3,6 +3,7 @@ package ebpfnew
 import (
 	"ebpf_common/pkg/generate"
 	"fmt"
+
 	"github.com/cilium/ebpf"
 	"github.com/cilium/ebpf/link"
 	"github.com/cilium/ebpf/rlimit"
@@ -25,7 +26,7 @@ func (c *CiliumEBPFRuntime) RemoveMemoryLimit() error {
 func (c *CiliumEBPFRuntime) LoadBpfObjects(opts *ebpf.CollectionOptions) error {
 	spec, err := generate.LoadBpf()
 	if err != nil {
-		return err
+		return fmt.Errorf("Generate LoadBpf Error: %w", err)
 	}
 
 	// map Pinning

@@ -3,6 +3,7 @@ package ebpfnew
 import (
 	"ebpf_common/pkg/generate"
 	"fmt"
+
 	"golang.org/x/sys/unix"
 )
 
