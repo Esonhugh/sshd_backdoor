@@ -39,6 +39,7 @@ func (c *CiliumEBPFRuntime) LoadBpfObjects(opts *ebpf.CollectionOptions) error {
 func New() *CiliumEBPFRuntime {
 	return &CiliumEBPFRuntime{
 		Objects: &generate.BpfObjects{},
+		Links: make(map[string]link.Link),
 	}
 }
 
