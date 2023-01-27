@@ -1,0 +1,12 @@
+# why Demo command?
+
+Demo Command is because of the Cilium/ebpf not support to pin perf event links.
+
+issue: https://github.com/cilium/ebpf/issues/597
+
+When you try to pin this, you will got following error.
+
+```
+PANI[0001] Pin sys_enter_openat error: perf event link pin: not supported
+```
+
