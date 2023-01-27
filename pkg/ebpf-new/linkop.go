@@ -54,7 +54,7 @@ func (c *CiliumEBPFRuntime) CreatePinnedLink() error {
 	return nil
 }
 
-// CreateProgLink creates a link between a BPF program. There are attach process in link.Tracepoint
+// CreateLink creates a link between a BPF program. There are attach process in link.Tracepoint
 func (c *CiliumEBPFRuntime) CreateLink() error {
 	var err error
 
