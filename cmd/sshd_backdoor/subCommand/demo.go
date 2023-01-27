@@ -55,5 +55,6 @@ func ReadInputAsKey(block chan os.Signal) (key string) {
 	if key == "exit" {
 		block <- os.Interrupt
 	}
+	log.Info("Your Key set is ", key)
 	return
 }
