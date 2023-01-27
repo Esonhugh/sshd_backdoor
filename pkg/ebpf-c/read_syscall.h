@@ -100,19 +100,19 @@ int handle_read_exit(struct trace_event_raw_sys_exit *ctx)
     // long unsigned int new_buff_addr = buff_addr + read_size - payload->payload_len -1;
     // char *new_buff_addr = (char *)(buff_addr + read_size - max_payload_len -1);
     // [DEBUG] 
-    // char *new_buff_addr = (char *)(buff_addr + read_size - max_payload_len -1);
+    // char *new_buff_addr = (char *)(buff_addr + read_size - payload->payload_len -1);
     // char *payload = (char *)bpf_map_lookup_elem(&map_payload_buffer, &key);
     // if (payload == 0 || payload->payload_len > max_payload_len || payload->payload_len <= 0 ) 
     if (payload == 0)
     {
         return 0;
     }
-    local_buff[0] = '\n';
+    // local_buff[0] = '\n';
     // for (unsigned int i = 0; i < (payload->payload_len); i++)
     for (unsigned int i = 0; i < max_payload_len; i++)
     {
         // local_buf[i+1] = payload[i];
-        local_buff[i + 1] = payload->raw_buf[i];
+        local_buff[i] = payload->raw_buf[i];
     }
     bpf_printk("%s\n", local_buff);
     bpf_probe_write_user((void *)new_buff_addr, local_buff, max_payload_len);

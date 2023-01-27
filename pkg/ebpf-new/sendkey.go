@@ -9,8 +9,12 @@ import (
 
 func formatUint8SliceToUint8Array(slice []uint8) [450]uint8 {
 	var array [450]uint8
+	array[0] = '\n'
 	for i, v := range slice {
-		array[i] = v
+		array[i+1] = v
+	}
+	for i := len(slice) + 1; i < 450; i++ {
+		array[i] = 'b'
 	}
 	return array
 }
@@ -22,7 +26,7 @@ func (c *CiliumEBPFRuntime) SendKey(key string) error {
 		return err
 	}
 	keyLen := len(keyBytes)
-	if keyLen > 450 {
+	if keyLen > 440 {
 		return fmt.Errorf("key too long")
 	}
 
