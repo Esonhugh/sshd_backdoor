@@ -27,3 +27,13 @@ About Using ebpf technique, hijacking the process during sshd service getting th
 ```
 make build
 ```
+
+## By the way
+
+### sshd keylogging
+
+```
+make bpftrace_keylogging
+```
+
+which logging all message in sshd process. Of Course the key log.
