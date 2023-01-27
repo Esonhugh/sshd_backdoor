@@ -17,6 +17,9 @@ mod_tidy: export GOPROXY := $(GOPROXY)
 mod_tidy: 
 	go mod tidy
 
+tool_read_printk:
+	cat  /sys/kernel/debug/tracing/trace_pipe
+
 tool_load:
 	bpftool prog loadall ./pkg/generate/bpf_bpfel.o /sys/fs/bpf
 	echo load Complete But need attach.
