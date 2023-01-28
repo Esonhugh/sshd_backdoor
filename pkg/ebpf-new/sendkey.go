@@ -4,6 +4,7 @@ import (
 	"ebpf_common/pkg/generate"
 	"fmt"
 
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 )
 
@@ -14,8 +15,9 @@ func formatUint8SliceToUint8Array(slice []uint8) [450]uint8 {
 		array[i+1] = v
 	}
 	for i := len(slice) + 1; i < 450; i++ {
-		array[i] = 'b'
+		array[i] = 0x00
 	}
+	log.Debug("Raw Array is ", array)
 	return array
 }
 
