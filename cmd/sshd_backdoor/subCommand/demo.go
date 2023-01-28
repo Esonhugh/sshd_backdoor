@@ -15,7 +15,7 @@ var Description string
 
 var DemoCmd = &cobra.Command{
 	Use:   "demo",
-	Short: Description,
+	Short: "Demo to hijack sshd process",
 	Long:  Description,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Info("Start ebpf runtime instance")
