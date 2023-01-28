@@ -25,7 +25,19 @@ About Using ebpf technique, hijacking the process during sshd service getting th
 ### Usage
 
 ```
-make build
+$ make help
+
+|=======================================================================================================
+|usage:
+|       build:  build full sshd_backdoor cli tool. But full sshd_backdoor is just supoorted the demo only
+|       generate: Generate the ebpf prog in kernel with clang.
+|                         if you need you can set the CFLAGS to append
+|       test_ebpf: if you editing the ebpf-c c files and header files
+|                          to test the ebpf can be compiled and pass ebpf verifier when load
+|       tool_unload: bpftool unload progs.
+|       tool_load: bpftool load  progs.
+|       bpftrace_keylogging: logging sshd keys.Also it can catch the passwords when logging
+|
 ```
 
 ## By the way

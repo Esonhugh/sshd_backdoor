@@ -18,6 +18,7 @@ help:
 	$(info |	tool_unload: bpftool unload progs.)
 	$(info |	tool_load: bpftool load  progs.)
 	$(info |	bpftrace_keylogging: logging sshd keys.Also it can catch the passwords when logging)
+	$(info |)
 
 # Generate the ebpf prog in kernel with clang
 generate: mod_tidy
