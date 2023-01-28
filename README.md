@@ -49,3 +49,12 @@ make bpftrace_keylogging
 ```
 
 which logging all message in sshd process. Of Course the key log.
+
+
+### reference
+
+https://github.com/pathtofile/bad-bpf/blob/main/src/sudoadd.bpf.c
+
+https://www.youtube.com/watch?v=5zixNDolLrg
+
+etc.
