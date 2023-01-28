@@ -1,5 +1,0 @@
-package pkg
-
-func LoadBpfAndLinks() {
-
-}
