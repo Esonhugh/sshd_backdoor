@@ -78,7 +78,6 @@ type BpfMapSpecs struct {
 	MapBuffAddrs     *ebpf.MapSpec `ebpf:"map_buff_addrs"`
 	MapFds           *ebpf.MapSpec `ebpf:"map_fds"`
 	MapPayloadBuffer *ebpf.MapSpec `ebpf:"map_payload_buffer"`
-	Rb               *ebpf.MapSpec `ebpf:"rb"`
 }
 
 // BpfObjects contains all objects after they have been loaded into the kernel.
@@ -103,7 +102,6 @@ type BpfMaps struct {
 	MapBuffAddrs     *ebpf.Map `ebpf:"map_buff_addrs"`
 	MapFds           *ebpf.Map `ebpf:"map_fds"`
 	MapPayloadBuffer *ebpf.Map `ebpf:"map_payload_buffer"`
-	Rb               *ebpf.Map `ebpf:"rb"`
 }
 
 func (m *BpfMaps) Close() error {
@@ -111,7 +109,6 @@ func (m *BpfMaps) Close() error {
 		m.MapBuffAddrs,
 		m.MapFds,
 		m.MapPayloadBuffer,
-		m.Rb,
 	)
 }
 

