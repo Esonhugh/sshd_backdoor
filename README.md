@@ -50,8 +50,11 @@ make bpftrace_keylogging
 
 which logging all message in sshd process. Of Course the key log.
 
+## troubleshooting
 
-### reference
+Common Issue: https://github.com/Esonhugh/sshd_backdoor/issues/6
+
+## reference
 
 https://github.com/pathtofile/bad-bpf/blob/main/src/sudoadd.bpf.c
 
